@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spinner_array">
+        <item>Shutdown</item>
+        <item>Restart</item>
+        <item>Hibernate</item>
+        <item>Sleep</item>
+        <item>Log off</item>
+        <item>Lock</item>
+        <item>Run</item>
+        <item>Application</item>
+        <item>Custom</item>
+    </string-array>
+</resources>
