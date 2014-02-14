@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Net;
@@ -21,6 +19,7 @@ namespace PCQuickCommandsClient
 		String usname;
 		String CommandPath;
 		String previousCommand = "NOTHING";
+		String execCommand;
 		public Form1()
 		{
 			InitializeComponent();
@@ -28,13 +27,25 @@ namespace PCQuickCommandsClient
 
 		private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
 		{
+			this.WindowState = FormWindowState.Normal;
+			this.ShowInTaskbar = true;
 			this.Show();
+			this.Visible = true;
+			this.BringToFront();
+			this.Activate();
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
+			try
+			{
+				usname = File.ReadAllText(Environment.CurrentDirectory + "/" + "username.un");
+			}
+			catch (IOException ex) {
+				File.WriteAllText(Environment.CurrentDirectory + "/" + "username.un", "default");
+			}
 
-			usname = File.ReadAllText(Environment.CurrentDirectory + "/" + "username.un");
+			
 			if (usname == "default") {
 
 				this.WindowState = FormWindowState.Minimized;
@@ -48,6 +59,16 @@ namespace PCQuickCommandsClient
 			}
 			else
 			{
+				// So that we dont execute the previous command again on startup
+				try
+				{
+					previousCommand = File.ReadAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc");
+				}
+				catch (IOException ex)
+				{
+					File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", "NOTHING");
+				}
+				
 				timer1.Enabled = true;
 			}
 			
@@ -62,10 +83,9 @@ namespace PCQuickCommandsClient
 		{
 			try {
 				CommandPath = Path.Combine(Environment.CurrentDirectory, "command.txt");
-				String path = "http://www.serverpath.com/PCQuickCommands/" + usname + "/" + "command.txt";
-				String execCommand = "";
+				String path = "http://serverpath.com/PCQuickCommands/" + usname + "/" + "command.txt";
 				execCommand = (new WebClient()).DownloadString(path);
-				//So that we dont execute same command twice
+				// So that we dont execute same command twice
 				bool isPrevExecCmd = execCommand.Equals(previousCommand);
 
 				if (isPrevExecCmd == false)
@@ -74,12 +94,13 @@ namespace PCQuickCommandsClient
 					ExecuteCommand(execCommand);
 					timer1.Enabled = true;
 					previousCommand = execCommand;
+					File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", previousCommand);
 				}
 			}
 
 			catch (Exception ex)
 			{
-
+				MessageBox.Show(ex.ToString());
 			}
 
 		}
@@ -97,11 +118,15 @@ namespace PCQuickCommandsClient
 				break;
 			case "SHUTDOWN":
 				notifyIcon1.ShowBalloonTip(1000, "Shutdown", "Shutting down computer now", ToolTipIcon.Info);
-				Process.Start("shutdown", "/s /t 0");
+				Process.Start("cmd", "/c shutdown /s /t 1 /f");
 				break;
 			case "RESTART":
 				notifyIcon1.ShowBalloonTip(1000, "Restart", "Restarting computer now", ToolTipIcon.Info);
-				Process.Start("shutdown", "/l /t 0");
+				Process.Start("cmd", "/c shutdown /r /t 1 /f");
+				break;
+			case "LOGOFF":
+				notifyIcon1.ShowBalloonTip(1000, "Shutdown", "Logging off computer now", ToolTipIcon.Info);
+				Process.Start("cmd", "/c shutdown /l /t 1 /f");
 				break;
 			case "LOCK":
 				notifyIcon1.ShowBalloonTip(1000, "Lock", "Locking computer now", ToolTipIcon.Info);
@@ -123,11 +148,21 @@ namespace PCQuickCommandsClient
 				notifyIcon1.ShowBalloonTip(1000, "Application", "Application command received, executing now", ToolTipIcon.Info);
 			}
 			else if (command.Contains("CUSTOM")) {
-				// TODO
 				notifyIcon1.ShowBalloonTip(2500, "Custom", "Custom command received but cannot handle it", ToolTipIcon.Warning);
 			}
 			
 		}
+
+		private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Application.Exit();
+		}
+
+		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", previousCommand);
+		}
+
 	}
 
 

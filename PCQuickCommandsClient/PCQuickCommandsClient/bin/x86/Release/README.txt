@@ -1,0 +1,1 @@
+Double click PCQuickCommandsClient.exe to run it and that't it! You will be prompted to enter your username if you're running it the first time.
