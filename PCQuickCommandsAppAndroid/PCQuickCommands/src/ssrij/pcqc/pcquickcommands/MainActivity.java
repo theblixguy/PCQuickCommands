@@ -11,9 +11,16 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
+import android.net.NetworkInfo.State;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,9 +39,9 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnItemSelectedListener {
 
-	static String server = "Enter server URL";
-	static String username = "Enter username";
-	static String password = "Enter password";
+	static String server = "server url here";
+	static String username = "username here";
+	static String password = "password here";
 	private String pcqcusername = "";
 	private ProgressDialog pd;
 
@@ -78,33 +85,33 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 				v3.clearAnimation();
 				v4.clearAnimation();
 				
-		        v.startAnimation(a);
-		        v1.startAnimation(a1);
-		        v2.startAnimation(a2);
-		        v3.startAnimation(a3);
-		        v4.startAnimation(a4);
-		        a4.setAnimationListener(new AnimationListener() {    
-		            @Override
-		            public void onAnimationStart(Animation animation) {  
-		            }
+				v.startAnimation(a);
+				v1.startAnimation(a1);
+				v2.startAnimation(a2);
+				v3.startAnimation(a3);
+				v4.startAnimation(a4);
+				a4.setAnimationListener(new AnimationListener() {    
+					@Override
+					public void onAnimationStart(Animation animation) {  
+					}
 
-		            @Override
-		            public void onAnimationRepeat(Animation animation) {
-		            }
+					@Override
+					public void onAnimationRepeat(Animation animation) {
+					}
 
-		            @Override
-		            public void onAnimationEnd(Animation animation) {
-		            	setUpStuff();
-		            }
-		            	
-		        });
+					@Override
+					public void onAnimationEnd(Animation animation) {
+						setUpStuff();
+					}
+					
+				});
 			}
 		} catch (Exception e) {
 			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 	}
-        
-       
+	
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -116,12 +123,31 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_about:
-			Toast.makeText(getApplicationContext(), "Made by Suyash Srijan", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Made by Suyash Srijan\nVersion 1.0 Beta", Toast.LENGTH_LONG).show();
 			return true;
 		case R.id.action_showuname:
 			SharedPreferences settings = getSharedPreferences("signupdetails", 0);
 			String usname = settings.getString("username", "default");
 			Toast.makeText(getApplicationContext(), "Your username is: " + usname, Toast.LENGTH_LONG).show();
+			return true;
+		case R.id.action_ratereview:
+			try {
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=ssrij.pcqc.pcquickcommands")));
+			} catch (android.content.ActivityNotFoundException anfe) {
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=ssrij.pcqc.pcquickcommands")));
+			}
+			return true;
+		case R.id.action_clientdownload:
+			AlertDialog.Builder showDwnLink = new AlertDialog.Builder(this);
+			showDwnLink.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			showDwnLink.setMessage("You can download the client app from:\n\nhttp://www.bit.ly/urlcode");
+			showDwnLink.setTitle("Client App download");
+			showDwnLink.show();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -129,7 +155,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 	}
 
 	public void onItemSelected(AdapterView<?> parent, View view, 
-			int pos, long id) {
+	int pos, long id) {
 		EditText editText1 = (EditText)findViewById(R.id.editText1);
 		switch (pos) {
 		case 0:
@@ -159,17 +185,17 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 		case 6:
 			editText1.setText("");
 			editText1.setEnabled(true);
-			editText1.setHint("Enter command");
+			editText1.setHint("Enter run command");
 			break;
 		case 7:
 			editText1.setText("");
 			editText1.setEnabled(true);
-			editText1.setHint("Enter command");
+			editText1.setHint("Enter application name");
 			break;
 		case 8:
 			editText1.setText("");
 			editText1.setEnabled(true);
-			editText1.setHint("Enter command");
+			editText1.setHint("Enter custom command");
 			break;
 		}
 	}
@@ -211,12 +237,29 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 	}
 
 	public void ExecuteCommand(View v) {
-		ShowHideProgressDialog(true);
-		EditText CommandTxtView = (EditText)findViewById(R.id.editText1);
-		File commandFile = new File(getFilesDir().getPath() + "command.txt");
-		String commandtosend = CommandTxtView.getText().toString();
-		CreateCommandFile(commandtosend);
-		SendCommand(commandFile);
+		boolean hasConnection = checkNetworkState(getApplicationContext());
+		if (hasConnection == false) {
+			AlertDialog.Builder noInternet = new AlertDialog.Builder(this);
+			noInternet.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			noInternet.setMessage("You need to be connected to the internet in order to send a command");
+			noInternet.setTitle("Internet connection unavailable");
+			noInternet.show();
+		} 
+		
+		else {
+			
+			ShowHideProgressDialog(true);
+			EditText CommandTxtView = (EditText)findViewById(R.id.editText1);
+			File commandFile = new File(getFilesDir().getPath() + "command.txt");
+			String commandtosend = CommandTxtView.getText().toString();
+			CreateCommandFile(commandtosend);
+			SendCommand(commandFile);
+		}
 	}
 
 	public void CreateCommandFile(String text) {
@@ -256,10 +299,10 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 				fos.flush();
 				fos.close();
 			} else {
-			
-			fos.write(text.getBytes());
-			fos.flush();
-			fos.close();
+				
+				fos.write(text.getBytes());
+				fos.flush();
+				fos.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -294,8 +337,18 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 		Spinner spinner1 = (Spinner)findViewById(R.id.spinner1);
 		spinner1.setOnItemSelectedListener(this);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-				R.array.spinner_array, android.R.layout.simple_spinner_item);
+		R.array.spinner_array, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner1.setAdapter(adapter);
-    }
 	}
+	
+	public static boolean checkNetworkState(Context context) {
+		ConnectivityManager conMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo infos[] = conMgr.getAllNetworkInfo();
+		for (NetworkInfo info : infos) {
+			if (info.getState() == State.CONNECTED)
+			return true;
+		}
+		return false;
+	}
+}

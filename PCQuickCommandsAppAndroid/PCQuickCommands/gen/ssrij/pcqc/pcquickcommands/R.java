@@ -32,8 +32,10 @@ public final class R {
         public static final int TextView2=0x7f090006;
         public static final int TextView3=0x7f090005;
         public static final int View1=0x7f090001;
-        public static final int action_about=0x7f090008;
-        public static final int action_showuname=0x7f090009;
+        public static final int action_about=0x7f09000b;
+        public static final int action_clientdownload=0x7f090009;
+        public static final int action_ratereview=0x7f09000a;
+        public static final int action_showuname=0x7f090008;
         public static final int button1=0x7f090004;
         public static final int editText1=0x7f090003;
         public static final int spinner1=0x7f090002;
@@ -48,9 +50,11 @@ public final class R {
     }
     public static final class string {
         public static final int action_about=0x7f060001;
+        public static final int action_clientdownload=0x7f060004;
+        public static final int action_ratereview=0x7f060003;
         public static final int action_showuname=0x7f060002;
         public static final int app_name=0x7f060000;
-        public static final int hello_world=0x7f060003;
+        public static final int hello_world=0x7f060005;
     }
     public static final class style {
         /** 
