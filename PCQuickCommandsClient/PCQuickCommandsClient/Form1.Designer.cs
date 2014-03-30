@@ -36,6 +36,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.switchAccountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -51,14 +52,15 @@
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.switchAccountToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(93, 26);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(158, 70);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -85,6 +87,13 @@
             // 
             this.timer1.Interval = 5000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // switchAccountToolStripMenuItem
+            // 
+            this.switchAccountToolStripMenuItem.Name = "switchAccountToolStripMenuItem";
+            this.switchAccountToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.switchAccountToolStripMenuItem.Text = "Switch Account";
+            this.switchAccountToolStripMenuItem.Click += new System.EventHandler(this.switchAccountToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -119,6 +128,7 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem switchAccountToolStripMenuItem;
     }
 }
 

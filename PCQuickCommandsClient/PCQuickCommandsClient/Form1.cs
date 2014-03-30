@@ -18,7 +18,7 @@ namespace PCQuickCommandsClient
 		[DllImport("user32.dll", SetLastError = true)] static extern bool LockWorkStation();
 		String usname;
 		String CommandPath;
-		String previousCommand = "NOTHING";
+		String previousCommand = "IGNORE";
 		String execCommand;
 		public Form1()
 		{
@@ -66,7 +66,7 @@ namespace PCQuickCommandsClient
 				}
 				catch (IOException ex)
 				{
-					File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", "NOTHING");
+					File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", "IGNORE");
 				}
 				
 				timer1.Enabled = true;
@@ -83,18 +83,18 @@ namespace PCQuickCommandsClient
 		{
 			try {
 				CommandPath = Path.Combine(Environment.CurrentDirectory, "command.txt");
-				String path = "http://serverpath.com/PCQuickCommands/" + usname + "/" + "command.txt";
+				String path = "http://serverurl.com/PCQuickCommands/" + usname + "/" + "command.txt";
 				execCommand = (new WebClient()).DownloadString(path);
 				// So that we dont execute same command twice
 				bool isPrevExecCmd = execCommand.Equals(previousCommand);
 
 				if (isPrevExecCmd == false)
 				{
+                    File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", previousCommand);
 					timer1.Enabled = false;
 					ExecuteCommand(execCommand);
 					timer1.Enabled = true;
 					previousCommand = execCommand;
-					File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", previousCommand);
 				}
 			}
 
@@ -110,23 +110,23 @@ namespace PCQuickCommandsClient
 			switch (command) { 
 			case "HIBERNATE":
 				Application.SetSuspendState(PowerState.Hibernate, true, true);
-				notifyIcon1.ShowBalloonTip(1000, "Hibernate", "Hibernating computer now", ToolTipIcon.Info);
+                Process.Start("shutdown", "/h /t 3 /f");
 				break;
 			case "SLEEP":
 				Application.SetSuspendState(PowerState.Suspend, true, true);
-				notifyIcon1.ShowBalloonTip(1000, "Sleep", "Putting computer to sleep now", ToolTipIcon.Info);
+                //Process.Start("shutdown", "/s /t 3 /f");
 				break;
 			case "SHUTDOWN":
 				notifyIcon1.ShowBalloonTip(1000, "Shutdown", "Shutting down computer now", ToolTipIcon.Info);
-				Process.Start("cmd", "/c shutdown /s /t 1 /f");
+				Process.Start("shutdown", "/s /t 3 /f");
 				break;
 			case "RESTART":
 				notifyIcon1.ShowBalloonTip(1000, "Restart", "Restarting computer now", ToolTipIcon.Info);
-				Process.Start("cmd", "/c shutdown /r /t 1 /f");
+				Process.Start("shutdown", "/r /t 3 /f");
 				break;
 			case "LOGOFF":
 				notifyIcon1.ShowBalloonTip(1000, "Shutdown", "Logging off computer now", ToolTipIcon.Info);
-				Process.Start("cmd", "/c shutdown /l /t 1 /f");
+				Process.Start("shutdown", "/l /t 3 /f");
 				break;
 			case "LOCK":
 				notifyIcon1.ShowBalloonTip(1000, "Lock", "Locking computer now", ToolTipIcon.Info);
@@ -135,6 +135,9 @@ namespace PCQuickCommandsClient
 			case "DEFAULT":
 				notifyIcon1.ShowBalloonTip(500, "Test", "Test command received, ignore", ToolTipIcon.Info);
 				break;
+
+            case "IGNORE":
+                break;
 			}
 
 			if (command.Contains("RUN")) {
@@ -162,6 +165,13 @@ namespace PCQuickCommandsClient
 		{
 			File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", previousCommand);
 		}
+
+        private void switchAccountToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            File.WriteAllText(Environment.CurrentDirectory + "/" + "previouscommand.pc", "IGNORE");
+            System.IO.File.WriteAllText(Environment.CurrentDirectory + "/" + "username.un", "default");
+            Application.Restart();
+        }
 
 	}
 
