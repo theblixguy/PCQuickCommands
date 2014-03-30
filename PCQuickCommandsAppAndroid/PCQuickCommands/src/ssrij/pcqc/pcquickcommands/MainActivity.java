@@ -1,15 +1,26 @@
 package ssrij.pcqc.pcquickcommands;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.json.JSONArray;
+import org.jsoup.Jsoup;
 
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -19,9 +30,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.net.NetworkInfo.State;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,28 +45,42 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnItemSelectedListener {
 
-	static String server = "server url here";
-	static String username = "username here";
-	static String password = "password here";
+	static String server = "server URL here";
+	static String username = "server username here";
+	static String password = "server password here";
 	private String pcqcusername = "";
 	private ProgressDialog pd;
-
+	ArrayAdapter<String> adapter;
+	ArrayList<String> listItems = new ArrayList<String>();
+	JSONArray jsonArray = new JSONArray();
+	SharedPreferences settings;
+	String client_curver;
+	String server_client_curver;
+	String download_client_curver;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+		settings = getSharedPreferences("signupdetails", 0);
+		client_curver = settings.getString("client_curver", "1.1");
 		try {
-			SharedPreferences settings = getSharedPreferences("signupdetails", 0);
+			final boolean firstTime;
 			String usname = settings.getString("username", "default");
+			firstTime = settings.getBoolean("firstrun", false);
 			if (usname.equals("default")){
-				Intent intent1 = new Intent(MainActivity.this, SignUpActivity.class);
+
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putString("client_curver", "1.1");
+				editor.commit();
+
+				Intent intent1 = new Intent(MainActivity.this, FirstTimeSwitchActivity.class);
 				intent1.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 				startActivity(intent1);
 				finish();
@@ -66,7 +92,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 				Animation a2 = new TranslateAnimation(1000,0,0,0);
 				Animation a3 = new TranslateAnimation(1000,0,0,0);
 				Animation a4 = new TranslateAnimation(1000,0,0,0);
-				
+
 				a.setDuration(1000);
 				a1.setDuration(1200);
 				a2.setDuration(1400);
@@ -78,13 +104,13 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 				Spinner v2 = (Spinner)findViewById(R.id.spinner1);
 				EditText v3 = (EditText)findViewById(R.id.editText1);
 				Button v4 = (Button)findViewById(R.id.button1);
-				
+
 				v.clearAnimation();
 				v1.clearAnimation();
 				v2.clearAnimation();
 				v3.clearAnimation();
 				v4.clearAnimation();
-				
+
 				v.startAnimation(a);
 				v1.startAnimation(a1);
 				v2.startAnimation(a2);
@@ -101,17 +127,34 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 
 					@Override
 					public void onAnimationEnd(Animation animation) {
+
+						if (firstTime == true) {
+							ShowSetupUI();
+						}
+
 						setUpStuff();
 					}
-					
+
 				});
 			}
 		} catch (Exception e) {
 			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 	}
-	
-	
+
+	public void ShowSetupUI() {
+		Intent setupUI = new Intent(MainActivity.this, FirstRunActivity.class);
+		setupUI.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+		startActivity(setupUI);
+		overridePendingTransition(R.anim.slide_up, R.anim.no_change);
+	}
+
+	public void ShowAboutPage() {
+		Intent aboutPage = new Intent(MainActivity.this, AboutPageActivity.class);
+		aboutPage.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+		startActivity(aboutPage);
+		overridePendingTransition(R.anim.slide_up, R.anim.no_change);
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -123,12 +166,27 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_about:
-			Toast.makeText(getApplicationContext(), "Made by Suyash Srijan\nVersion 1.0 Beta", Toast.LENGTH_LONG).show();
+			ShowAboutPage();
 			return true;
 		case R.id.action_showuname:
 			SharedPreferences settings = getSharedPreferences("signupdetails", 0);
 			String usname = settings.getString("username", "default");
 			Toast.makeText(getApplicationContext(), "Your username is: " + usname, Toast.LENGTH_LONG).show();
+			return true;
+
+		case R.id.action_switch:
+			try {
+				Intent loginPage = new Intent(MainActivity.this, LoginActivity.class);
+				loginPage.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+				startActivity(loginPage);
+				overridePendingTransition(R.anim.slide_up, R.anim.no_change);
+				finish(); 
+			} catch (Exception e) {
+				Intent loginPage = new Intent(MainActivity.this, LoginActivity.class);
+				loginPage.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+				startActivity(loginPage);
+				overridePendingTransition(R.anim.slide_up, R.anim.no_change);
+			}
 			return true;
 		case R.id.action_ratereview:
 			try {
@@ -138,16 +196,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 			}
 			return true;
 		case R.id.action_clientdownload:
-			AlertDialog.Builder showDwnLink = new AlertDialog.Builder(this);
-			showDwnLink.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-				}
-			});
-			showDwnLink.setMessage("You can download the client app from:\n\nhttp://www.bit.ly/urlcode");
-			showDwnLink.setTitle("Client App download");
-			showDwnLink.show();
+			ShowSetupUI();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -155,7 +204,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 	}
 
 	public void onItemSelected(AdapterView<?> parent, View view, 
-	int pos, long id) {
+			int pos, long id) {
 		EditText editText1 = (EditText)findViewById(R.id.editText1);
 		switch (pos) {
 		case 0:
@@ -236,12 +285,107 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 
 	}
 
-	public void ExecuteCommand(View v) {
+	public void CheckForUpdate() {
+		Thread thread = new Thread()
+		{
+			@Override
+			public void run() {
+				try {       
+					String curVersion = getPackageManager().getPackageInfo("ssrij.pcqc.pcquickcommands", 0).versionName;
+					String newVersion = curVersion;
+					boolean newVersionAvailable = false;
+					newVersion = Jsoup.connect("https://play.google.com/store/apps/details?id=ssrij.pcqc.pcquickcommands&hl=en")
+							.timeout(30000)
+							.userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+							.referrer("http://www.google.com")
+							.get()
+							.select("div[itemprop=softwareVersion]")
+							.first()
+							.ownText();
+					newVersionAvailable = (parseValue(curVersion) < parseValue(newVersion)) ? true : false;
+
+					if (newVersionAvailable == true){
+						runOnUiThread(new Runnable() {
+							public void run() {
+								showUpdateDialog();
+							}
+						});
+					}
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		thread.start();
+	}
+
+	public void showUpdateDialog() {
+		AlertDialog.Builder DialogBld = new AlertDialog.Builder(this);
+		DialogBld.setPositiveButton("Update later", new DialogInterface.OnClickListener() {
+
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}
+		});
+
+		DialogBld.setNegativeButton("Update now", new DialogInterface.OnClickListener() {
+
+			public void onClick(DialogInterface dialog, int which) {
+				try {
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=ssrij.pcqc.pcquickcommands")));
+				} catch (android.content.ActivityNotFoundException anfe) {
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=ssrij.pcqc.pcquickcommands")));
+				}
+			}
+		});
+
+		DialogBld.setMessage("A new version of this app is available on the Play Store! Would you like to update?");
+		DialogBld.setTitle("Update available");
+		DialogBld.show();
+	}
+
+	private long parseValue(String string) {
+		string = string.trim();
+		if( string.contains( "." )){ 
+			final int index = string.lastIndexOf( "." );
+			return parseValue( string.substring( 0, index ))* 100 + parseValue( string.substring( index + 1 )); 
+		}
+		else {
+			return Long.valueOf( string ); 
+		}
+	}
+
+
+
+	@SuppressLint("CutPasteId") public void ExecuteCommand(View v) {
+
+		// Save command
+		try {
+			EditText CmdToSend = (EditText)findViewById(R.id.editText1);
+			ListView lv = (ListView) findViewById(R.id.listView1);
+			adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
+			lv.setAdapter(adapter);
+			listItems.add(CmdToSend.getText().toString());
+			jsonArray.put(CmdToSend.getText().toString());
+			adapter.notifyDataSetChanged();
+			SharedPreferences data = PreferenceManager.getDefaultSharedPreferences(this);
+			SharedPreferences.Editor editor = data.edit();
+			editor.putString("CommandsHistory", jsonArray.toString());
+			editor.commit();
+		} 
+
+		catch (Exception e) { 
+
+		}
+
+
 		boolean hasConnection = checkNetworkState(getApplicationContext());
 		if (hasConnection == false) {
 			AlertDialog.Builder noInternet = new AlertDialog.Builder(this);
 			noInternet.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				
+
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.cancel();
 				}
@@ -250,9 +394,9 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 			noInternet.setTitle("Internet connection unavailable");
 			noInternet.show();
 		} 
-		
+
 		else {
-			
+
 			ShowHideProgressDialog(true);
 			EditText CommandTxtView = (EditText)findViewById(R.id.editText1);
 			File commandFile = new File(getFilesDir().getPath() + "command.txt");
@@ -282,7 +426,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 		try {
 			FileOutputStream fos = new FileOutputStream(commandFile);
 			Spinner spinner1 = (Spinner)findViewById(R.id.spinner1);
-			
+
 			if (spinner1.getSelectedItemPosition() == 6) {
 				String newtext = "RUN ".concat(text);
 				fos.write(newtext.getBytes());
@@ -299,7 +443,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 				fos.flush();
 				fos.close();
 			} else {
-				
+
 				fos.write(text.getBytes());
 				fos.flush();
 				fos.close();
@@ -332,22 +476,110 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 		ShowHideProgressDialog(false);
 		super.onDestroy();
 	}
-	
+
 	public void setUpStuff() {
 		Spinner spinner1 = (Spinner)findViewById(R.id.spinner1);
 		spinner1.setOnItemSelectedListener(this);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-		R.array.spinner_array, android.R.layout.simple_spinner_item);
+				R.array.spinner_array, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner1.setAdapter(adapter);
+		CheckForUpdate();
+		CheckForClientAppUpdate();
+		setUpSlidingMenu();
 	}
-	
+
+	public void CheckForClientAppUpdate() {
+		Thread thread = new Thread()
+		{
+			@Override
+			public void run() {
+				try {
+					URL version_url = new URL("http://www.getcrush.co/PCQuickCommandsClient/clientapp_curver.txt");
+					BufferedReader in = new BufferedReader(new InputStreamReader(version_url.openStream()));
+					server_client_curver = in.readLine();
+					in.close();
+
+					URL download_url = new URL("http://www.getcrush.co/PCQuickCommandsClient/update_url.txt");
+					BufferedReader in1 = new BufferedReader(new InputStreamReader(download_url.openStream()));
+					download_client_curver = in1.readLine();
+					in1.close();
+
+				} catch (MalformedURLException e) {
+				} catch (IOException e) {
+				}
+
+				if (server_client_curver.equals(client_curver) == false) {
+					runOnUiThread(new Runnable() {
+						public void run() {
+							showClientAppUpdateDialog();
+						}
+					});
+				}
+			}
+		};
+		thread.start();
+	}
+
+	public void showClientAppUpdateDialog() {
+		AlertDialog.Builder DialogBld = new AlertDialog.Builder(this);
+		DialogBld.setPositiveButton("Close (Dont remind me again)", new DialogInterface.OnClickListener() {
+
+			public void onClick(DialogInterface dialog, int which) {
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putString("client_curver", server_client_curver);
+				editor.commit();
+				dialog.cancel();
+			}
+		});
+
+		DialogBld.setMessage("A new version of the client app (version " + server_client_curver + ") is available for download. You should update it now to ensure maximum stability and compatibility. You can download it from: "  + download_client_curver);
+		DialogBld.setTitle("Client app update available");
+		DialogBld.show();
+	}
+
+	public void setUpSlidingMenu() {
+		final SlidingMenu menu = new SlidingMenu(this);
+		menu.setMode(SlidingMenu.LEFT);
+		menu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+		menu.setBehindWidth(500);
+		menu.setShadowWidthRes(R.dimen.slidingmenuWidth);
+		menu.setFadeDegree(0.35f);
+		menu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
+		menu.setMenu(R.layout.menu);
+
+		final ListView lv = (ListView) findViewById(R.id.listView1);
+		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
+		lv.setAdapter(adapter);
+		SharedPreferences data = PreferenceManager.getDefaultSharedPreferences(this);
+		try {
+			JSONArray jsonArray2 = new JSONArray(data.getString("CommandsHistory", "[]"));
+			for (int i = 0; i < jsonArray2.length(); i++) {
+				jsonArray.put(jsonArray2.getString(i));
+				listItems.add(jsonArray2.getString(i));
+			}
+		} catch (Exception e) {}
+		adapter.notifyDataSetChanged();
+
+		lv.setClickable(true);
+		lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+				String command = lv.getItemAtPosition(position).toString();
+				EditText CmdTxt = (EditText)findViewById(R.id.editText1);
+				CmdTxt.setText(command);
+				menu.toggle();
+			}
+		});
+	}
+
 	public static boolean checkNetworkState(Context context) {
 		ConnectivityManager conMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo infos[] = conMgr.getAllNetworkInfo();
 		for (NetworkInfo info : infos) {
 			if (info.getState() == State.CONNECTED)
-			return true;
+				return true;
 		}
 		return false;
 	}

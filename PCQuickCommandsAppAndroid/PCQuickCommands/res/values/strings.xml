@@ -4,8 +4,9 @@
     <string name="app_name">PC Quick Commands</string>
     <string name="action_about">About</string>
     <string name="action_showuname">Show my username</string>
+    <string name="action_switch">Switch account</string>
     <string name="action_ratereview">Rate/Review this app</string>
-    <string name="action_clientdownload">Download client app</string>
+    <string name="action_clientdownload">Setup tutorial</string>
     <string name="hello_world">Hello world!</string>
 
 </resources>

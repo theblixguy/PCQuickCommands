@@ -31,17 +31,17 @@ import android.widget.EditText;
 public class SignUpActivity extends Activity {
 
 	static String server = "server url here";
-	static String username = "username here";
-	static String password = "password here";
+	static String username = "server username here";
+	static String password = "server password here";
 	private ProgressDialog pd;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.signup);
-		
+
 	}
-	
+
 	public void CreateCommandFile(String text) {
 		File commandFile = new File(getFilesDir().getPath() + "command.txt");
 		if (commandFile.exists()) {
@@ -68,7 +68,7 @@ public class SignUpActivity extends Activity {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void VerifyAndContinue(View v) {
 		boolean hasConnection = checkNetworkState(getApplicationContext());
 		EditText editText2 = (EditText)findViewById(R.id.editText1);
@@ -77,14 +77,14 @@ public class SignUpActivity extends Activity {
 		if (hasConnection == false) {
 			showAlertDialog("No internet connection", "You need to be connected to the internet in order to create an account");
 		} 
-		
+
 		else {
 			if (isValidUsername == false) {
 				showAlertDialog("Invalid username", "The username you specified is invalid!\n\nUsername:\n(1) Cannot exceed 12 characters in length\n(2) Cannot be less than 5 characters or zero\n(3) Cannot contain anything other than alphabets(A-Z, a-z) and numbers (0-9)");
 			} 
-			
+
 			else {
-				
+
 				SaveAndContinue();
 			}
 		}
@@ -97,7 +97,7 @@ public class SignUpActivity extends Activity {
 		String defCommand = "DEFAULT";
 		final File commandFile = new File(getFilesDir().getPath() + "command.txt");
 		CreateCommandFile(defCommand);
-		
+
 		Thread thread = new Thread()
 		{
 			@Override
@@ -109,22 +109,22 @@ public class SignUpActivity extends Activity {
 					ftpClient.enterLocalPassiveMode();
 					ftpClient.login(username, password);
 					ftpClient.changeWorkingDirectory("/PCQuickCommands");
-					
+
 					boolean directoryExists = ftpClient.changeWorkingDirectory(usname);
-					
+
 					if (directoryExists == true){
-						
+
 						runOnUiThread(new Runnable() {
 							public void run() {
 								showAlertDialog("Username not available", "The username you specified already exists! Please specify another one");
 							}
 						});
-						
+
 						ftpClient.logout();
 						ftpClient.disconnect();
 						ShowHideProgressDialog(false);
 					} 
-					
+
 					else  {
 						ftpClient.makeDirectory(usname);
 						ftpClient.changeWorkingDirectory(usname);
@@ -137,10 +137,11 @@ public class SignUpActivity extends Activity {
 						buffIn.close();
 						ftpClient.logout();
 						ftpClient.disconnect();
-						
+
 						SharedPreferences settings = getSharedPreferences("signupdetails", 0);
 						SharedPreferences.Editor editor = settings.edit();
 						editor.putString("username", usname);
+						editor.putBoolean("firstrun", true);
 						editor.commit();
 						ShowHideProgressDialog(false);
 						LaunchMainScreen();
@@ -157,39 +158,38 @@ public class SignUpActivity extends Activity {
 					ShowHideProgressDialog(false);
 				}
 			}
-			
+
 		};
 
 		thread.start();
 	}
-	
+
 	public void LaunchMainScreen() {
 		Intent a = new Intent(SignUpActivity.this, MainActivity.class);
-		a.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 		startActivity(a);
 		finish();
 	}
-	
+
 	public boolean verifyUsname(String usName) {
 		boolean isValidUsername = isValidUsname(usName.toString().trim());
 		boolean returnVal = true;
 		int lenUsname = usName.length();
-		
+
 		if (isValidUsername == false) {
 			returnVal = false;
 		} 
-		
+
 		if (lenUsname > 12) {
 			returnVal = false;
 		}
-		
+
 		if (lenUsname < 5) {
 			returnVal = false;
 		}
-		
+
 		return returnVal;
 	}
-	
+
 	public void ShowHideProgressDialog(boolean showorhide){
 
 		if (showorhide == true) {
@@ -207,11 +207,11 @@ public class SignUpActivity extends Activity {
 		}
 
 	}
-	
+
 	public void showAlertDialog(String title, String message) {
 		AlertDialog.Builder DialogBld = new AlertDialog.Builder(this);
 		DialogBld.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			
+
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.cancel();
 			}
@@ -220,17 +220,17 @@ public class SignUpActivity extends Activity {
 		DialogBld.setTitle(title);
 		DialogBld.show();
 	}
-	
+
 	public static boolean checkNetworkState(Context context) {
 		ConnectivityManager conMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo infos[] = conMgr.getAllNetworkInfo();
 		for (NetworkInfo info : infos) {
 			if (info.getState() == State.CONNECTED)
-			return true;
+				return true;
 		}
 		return false;
 	}
-	
+
 	public static boolean isValidUsname(String usname)
 	{
 		boolean isValid = false;

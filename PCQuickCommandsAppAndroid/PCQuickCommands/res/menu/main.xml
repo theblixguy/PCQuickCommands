@@ -7,6 +7,12 @@
         android:title="@string/action_showuname"/>
     
     <item
+        android:id="@+id/action_switch"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_switch"/>
+    
+    <item
         android:id="@+id/action_clientdownload"
         android:orderInCategory="100"
         android:showAsAction="never"
