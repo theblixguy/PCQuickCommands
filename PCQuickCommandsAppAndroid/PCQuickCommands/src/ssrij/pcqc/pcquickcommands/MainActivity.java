@@ -495,12 +495,12 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
 			@Override
 			public void run() {
 				try {
-					URL version_url = new URL("http://www.getcrush.co/PCQuickCommandsClient/clientapp_curver.txt");
+					URL version_url = new URL("http://www.serverpath.com/PCQuickCommandsClient/clientapp_curver.txt");
 					BufferedReader in = new BufferedReader(new InputStreamReader(version_url.openStream()));
 					server_client_curver = in.readLine();
 					in.close();
 
-					URL download_url = new URL("http://www.getcrush.co/PCQuickCommandsClient/update_url.txt");
+					URL download_url = new URL("http://serverpath.com/PCQuickCommandsClient/update_url.txt");
 					BufferedReader in1 = new BufferedReader(new InputStreamReader(download_url.openStream()));
 					download_client_curver = in1.readLine();
 					in1.close();
